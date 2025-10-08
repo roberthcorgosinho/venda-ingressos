@@ -1,0 +1,41 @@
+@startuml
+' Definições visuais
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor White
+    BorderColor #505050
+}
+
+actor "Cliente" as cliente
+
+' Casos de Uso do processo de compra
+usecase "Comprar Ingresso" as UC_Comprar
+usecase "Processar Pagamento" as UC_Pagar
+usecase "Verificar Disponibilidade" as UC_Verificar
+usecase "Aplicar Cupom de Desconto" as UC_Cupom
+usecase "Realizar Login" as UC_Login
+usecase "Informar Dados do Beneficiário" as UC_Dados
+
+' Relacionamentos
+cliente -up- UC_Comprar
+
+UC_Comprar ..> UC_Login : <<include>>
+UC_Comprar ..> UC_Verificar : <<include>>
+UC_Comprar ..> UC_Dados : <<include>>
+UC_Comprar ..> UC_Pagar : <<include>>
+UC_Comprar <.. UC_Cupom : <<extend>>
+
+note right of UC_Dados
+  Para cada ingresso, o sistema
+  solicita: Nome, CPF e Data de
+  Nascimento do beneficiário.
+end note
+
+note bottom of UC_Comprar
+  <b>Regras de Negócio Internas:</b>
+  - O sistema valida se o <b>Cliente</b> (comprador) é maior de idade.
+  - O sistema exibe um alerta sobre a <b>restrição de idade do evento</b>.
+  - O sistema calcula automaticamente o valor com base na idade
+    do beneficiário (<b>meia-entrada</b> para idosos e crianças).
+end note
+@enduml

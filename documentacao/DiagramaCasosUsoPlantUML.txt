@@ -1,0 +1,63 @@
+@startuml
+' Definições visuais para clareza
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor White
+    BorderColor #505050
+}
+skinparam rectangle {
+    BorderColor #505050
+    BackgroundColor #F0F0F0
+}
+left to right direction
+
+' Atores
+actor "Cliente" as cliente
+actor "Produtor do Evento" as produtor
+actor "Administrador Geral" as admin
+
+' O Administrador herda as capacidades dos outros atores
+admin --|> cliente
+admin --|> produtor
+
+rectangle "Sistema de Venda de Ingressos" {
+    ' Casos de Uso do Cliente
+    usecase "Pesquisar Eventos" as UC1
+    usecase "Comprar Ingresso" as UC2
+    usecase "Visualizar Meus Ingressos" as UC3
+    usecase "Gerenciar Perfil" as UC_Perfil
+    usecase "Realizar Login" as UC_Login
+
+    ' Casos de Uso do Produtor
+    usecase "Criar Evento" as UC4
+    usecase "Gerenciar Meus Eventos" as UC5
+    usecase "Criar Cupom de Desconto" as UC6
+
+    ' Casos de Uso do Administrador
+    usecase "Gerenciar Usuários" as UC7
+    usecase "Cadastrar Taxas de Serviço" as UC8
+    usecase "Cadastrar Meios de Pagamento" as UC9
+}
+
+' Relacionamentos
+cliente -- UC1
+cliente -- UC2
+cliente -- UC3
+
+produtor -- UC4
+produtor -- UC5
+produtor -- UC6
+
+admin -- UC7
+admin -- UC8
+admin -- UC9
+
+' Casos de uso comuns a todos (através da herança e associação direta)
+(UC_Perfil) .up.> (UC_Login) : <<include>>
+(UC2) .up.> (UC_Login) : <<include>>
+(UC4) .up.> (UC_Login) : <<include>>
+
+cliente -- (UC_Perfil)
+produtor -- (UC_Perfil)
+
+@enduml

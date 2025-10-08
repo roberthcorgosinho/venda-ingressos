@@ -1,0 +1,106 @@
+@startuml
+skinparam linetype ortho
+skinparam monochrome true
+skinparam shadowing false
+skinparam class {
+    BackgroundColor White
+    ArrowColor #505050
+    BorderColor #505050
+}
+
+entity "usuarios" as T_USUARIOS {
+  + id: BIGINT {PK}
+  --
+  # tipo_usuario: VARCHAR(31)
+  - nome: VARCHAR(255)
+  - email: VARCHAR(255) {UQ}
+  - senha: VARCHAR(255)
+  - cpf: VARCHAR(11) {UQ}
+  - data_nascimento: DATE
+}
+
+entity "eventos" as T_EVENTOS {
+  + id: BIGINT {PK}
+  --
+  # produtor_id: BIGINT {FK}
+  - nome: VARCHAR(255)
+  - descricao: TEXT
+  - data_hora: TIMESTAMP
+  - local: VARCHAR(255)
+  - capacidade: INTEGER
+  - ingressos_vendidos: INTEGER
+  - valor_ingresso_cheio: DECIMAL(10, 2)
+  - classificacao_etaria: INTEGER
+  - status: VARCHAR(50)
+}
+
+entity "vendas" as T_VENDAS {
+  + id: BIGINT {PK}
+  --
+  # cliente_id: BIGINT {FK}
+  # meio_pagamento_id: BIGINT {FK}
+  # cupom_id: BIGINT {FK} (nullable)
+  - data_hora: TIMESTAMP
+  - valor_bruto: DECIMAL(10, 2)
+  - valor_desconto: DECIMAL(10, 2)
+  - valor_taxas: DECIMAL(10, 2)
+  - valor_total: DECIMAL(10, 2)
+  - status: VARCHAR(50)
+}
+
+entity "ingressos" as T_INGRESSOS {
+  + id: BIGINT {PK}
+  --
+  # venda_id: BIGINT {FK}
+  # evento_id: BIGINT {FK}
+  - codigo: VARCHAR(255) {UQ}
+  - nome_beneficiario: VARCHAR(255)
+  - cpf_beneficiario: VARCHAR(11)
+  - data_nascimento_beneficiario: DATE
+  - tipo: VARCHAR(50)
+  - valor_pago: DECIMAL(10, 2)
+}
+
+entity "cupons_desconto" as T_CUPONS {
+  + id: BIGINT {PK}
+  --
+  - codigo: VARCHAR(50) {UQ}
+  - percentual_desconto: DECIMAL(5, 2)
+  - data_validade: DATE
+  - is_ativo: BOOLEAN
+}
+
+entity "taxas_servico" as T_TAXAS {
+  + id: BIGINT {PK}
+  --
+  - descricao: VARCHAR(255)
+  - valor: DECIMAL(10, 2)
+  - is_percentual: BOOLEAN
+}
+
+entity "meios_pagamento" as T_PAGAMENTOS {
+  + id: BIGINT {PK}
+  --
+  - nome: VARCHAR(100)
+  - is_ativo: BOOLEAN
+}
+
+entity "venda_taxas" as T_VENDA_TAXAS {
+  # venda_id: BIGINT {PK, FK}
+  # taxa_id: BIGINT {PK, FK}
+}
+
+T_USUARIOS ||--|{ T_EVENTOS : "gerencia"
+T_USUARIOS ||--|{ T_VENDAS : "realiza"
+
+T_VENDAS ||--|{ T_INGRESSOS : "contém"
+T_EVENTOS ||--o{ T_INGRESSOS : "é para"
+
+T_VENDAS }o--|| T_CUPONS : "aplica"
+T_VENDAS ||--|{ T_PAGAMENTOS : "é paga com"
+
+' Relações explícitas da tabela de junção
+T_VENDAS ||--o{ T_VENDA_TAXAS : "possui taxas"
+T_TAXAS  ||--o{ T_VENDA_TAXAS : "associada a vendas"
+
+@enduml

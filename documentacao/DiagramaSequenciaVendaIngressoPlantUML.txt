@@ -1,0 +1,83 @@
+@startuml
+' --- Configurações Visuais ---
+autonumber "<b>[0]</b>"
+skinparam sequence {
+    ArrowColor #505050
+    ActorBorderColor #505050
+    LifeLineBorderColor #A0A0A0
+    LifeLineBackgroundColor #F0F0F0
+    ParticipantBorderColor #505050
+    ParticipantBackgroundColor White
+    DatabaseBackgroundColor #F0F0F0
+    DatabaseBorderColor #505050
+}
+
+' --- Participantes ---
+actor ":Cliente" as user
+participant ":VendaController" as controller <<API>>
+participant ":VendaService" as venda_service <<Service>>
+participant ":EventoService" as evento_service <<Service>>
+participant ":IngressoService" as ingresso_service <<Service>>
+participant ":EventoRepository" as evento_repo <<Repository>>
+participant ":PagamentoGateway" as gateway <<External>>
+participant ":VendaRepository" as venda_repo <<Repository>>
+participant ":EmailService" as email_service <<Infra>>
+
+' --- Início do Fluxo ---
+user -> controller: comprarIngresso(eventoId, dadosBeneficiarios)
+activate controller
+
+controller -> venda_service: realizarCompra(compraDTO)
+activate venda_service
+
+venda_service -> evento_service: verificarDisponibilidade(eventoId, quantidade)
+activate evento_service
+evento_service -> evento_repo: findById(eventoId)
+activate evento_repo
+evento_repo --> evento_service: evento
+deactivate evento_repo
+evento_service --> venda_service: true
+deactivate evento_service
+
+note right of venda_service: RN-01: Valida se o Cliente (comprador) é maior de idade.
+
+loop para cada beneficiario
+    venda_service -> ingresso_service: criarIngresso(beneficiario, evento)
+    activate ingresso_service
+    note right of ingresso_service: Aplica regras RN-03 e RN-04 (meia-entrada)\ne RN-02 (alerta de classificação etária)
+    ingresso_service --> venda_service: ingressoCalculado
+    deactivate ingresso_service
+end
+
+venda_service -> venda_service: calcularTotais(ingressos, taxas)
+
+group Processamento de Pagamento e Persistência [Transacional]
+    venda_service -> gateway: processarPagamento(dadosPagamento, valorTotal)
+    activate gateway
+    gateway --> venda_service: {status: 'APROVADO'}
+    deactivate gateway
+
+    venda_service -> venda_repo: salvarVenda(venda)
+    activate venda_repo
+    venda_repo --> venda_service: vendaSalva
+    deactivate venda_repo
+
+    venda_service -> evento_service: decrementarEstoque(eventoId, quantidade)
+    activate evento_service
+    evento_service -> evento_repo: save(evento)
+    activate evento_repo
+    evento_repo --> evento_service:
+    deactivate evento_repo
+    deactivate evento_service
+end
+
+venda_service ->> email_service: enviarConfirmacao(cliente, vendaSalva)
+note right of email_service: Chamada assíncrona
+
+venda_service --> controller: vendaConfirmadaDTO
+deactivate venda_service
+
+controller --> user: 200 OK (Confirmação da Compra)
+deactivate controller
+
+@enduml

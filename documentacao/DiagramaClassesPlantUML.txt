@@ -1,0 +1,152 @@
+@startuml
+' Definições visuais para clareza
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' --- Entidades Principais ---
+
+abstract class Usuario {
+  # Long id
+  # String nome
+  # String email
+  # String senha
+  # String cpf
+  # LocalDate dataNascimento
+  + autenticar(email, senha): boolean
+  + calcularIdade(): int
+}
+
+class Cliente extends Usuario {
+  + pesquisarEvento(filtro): List<Evento>
+  + comprarIngresso(evento, beneficiarios, meioPagamento): Venda
+}
+
+class Produtor extends Usuario {
+  + criarEvento(dadosEvento): Evento
+  + gerenciarEvento(eventoId): Evento
+  + criarCupom(dadosCupom): CupomDesconto
+}
+
+class Administrador extends Usuario {
+  + cadastrarTaxa(dadosTaxa): TaxaServico
+  + cadastrarMeioPagamento(dadosPagamento): MeioPagamento
+}
+
+class Evento {
+  - Long id
+  - String nome
+  - String descricao
+  - LocalDateTime dataHora
+  - String local
+  - int capacidade
+  - int ingressosVendidos
+  - BigDecimal valorIngressoCheio
+  - int classificacaoEtaria
+  - StatusEvento status
+  + verificarDisponibilidade(): boolean
+  + validarClassificacaoEtaria(idade): boolean
+}
+
+enum StatusEvento {
+  PLANEJADO
+  ABERTO_PARA_VENDA
+  ESGOTADO
+  REALIZADO
+  CANCELADO
+}
+
+class Ingresso {
+  - Long id
+  - String codigo
+  - String nomeBeneficiario
+  - String cpfBeneficiario
+  - LocalDate dataNascimentoBeneficiario
+  - TipoIngresso tipo
+  - BigDecimal valorPago
+  # calcularPreco(valorCheio): void
+}
+
+enum TipoIngresso {
+  INTEIRA
+  MEIA_IDOSO
+  MEIA_CRIANCA
+  CORTESIA
+}
+
+class Venda {
+  - Long id
+  - LocalDateTime dataHora
+  - BigDecimal valorBruto
+  - BigDecimal valorDesconto
+  - BigDecimal valorTaxas
+  - BigDecimal valorTotal
+  - StatusVenda status
+  + calcularTotal(): BigDecimal
+  + aplicarCupom(cupom): void
+  + adicionarTaxa(taxa): void
+}
+
+enum StatusVenda {
+  PENDENTE
+  APROVADA
+  REJEITADA
+  CANCELADA
+}
+
+class CupomDesconto {
+  - Long id
+  - String codigo
+  - BigDecimal percentualDesconto
+  - LocalDate dataValidade
+  - boolean isAtivo
+}
+
+class TaxaServico {
+  - Long id
+  - String descricao
+  - BigDecimal valor
+  - boolean isPercentual
+}
+
+class MeioPagamento {
+  - Long id
+  - String nome (ex: "Cartão de Crédito")
+  - String descricao
+  - boolean isAtivo
+}
+
+' --- Relacionamentos ---
+
+Usuario <|-- Cliente
+Usuario <|-- Produtor
+Usuario <|-- Administrador
+
+Produtor "1" -- "*" Evento : cria/gerencia >
+Cliente "1" -- "*" Venda : realiza >
+Venda "1" o-- "1..*" Ingresso : contém
+Evento "1" -- "*" Ingresso : é para
+Venda "1" -- "1" MeioPagamento : é paga com >
+Venda "1" -- "0..1" CupomDesconto : aplica
+Venda "1" -- "*" TaxaServico : incide
+
+' --- Notas Explicativas ---
+
+note right of Ingresso
+  O método `calcularPreco()` será interno e
+  invocado na criação do ingresso. Ele definirá
+  o `tipo` (INTEIRA, MEIA_IDOSO, etc.) com base
+  na `dataNascimentoBeneficiario` e o `valorPago`
+  com base no `valorIngressoCheio` do Evento.
+end note
+
+note top of Cliente
+  A regra de que o comprador (Cliente)
+  deve ser adulto será validada no método
+  `comprarIngresso()`, verificando a idade
+  do próprio objeto Cliente.
+end note
+
+note "O Administrador herda implicitamente as capacidades dos outros perfis" as AdminNote
+AdminNote .. Administrador
+
+@enduml
