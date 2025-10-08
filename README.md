@@ -1,6 +1,6 @@
 # Venda de Ingressos
 
-![GitHub repo size](https://img.shields.io/github/repo-size/iuricode/venda-ingressos?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/iuricode/Venda-ingressos?style=for-the-badge)
 ![GitHub language count](https://img.shields.io/github/languages/count/iuricode/venda-ingressos?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/iuricode/venda-ingressos?style=for-the-badge)
 ![Bitbucket open issues](https://img.shields.io/bitbucket/issues/iuricode/venda-ingressos?style=for-the-badge)
